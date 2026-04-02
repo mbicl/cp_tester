@@ -1,4 +1,5 @@
 .PHONY: build clean run build-linux build-darwin build-windows build-all install
+default: run
 
 GO=go
 APP_NAME=cp
