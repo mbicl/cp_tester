@@ -2,7 +2,7 @@
 set -e
 
 APP_NAME="cp_tester"
-BINARY_NAME="cp"
+BINARY_NAME="cpt"
 REPO="mbicl/cp_tester"
 INSTALL_DIR="/usr/local/bin"
 

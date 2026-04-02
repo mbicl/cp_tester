@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $AppName = "cp_tester"
-$BinaryName = "cp.exe"
+$BinaryName = "cpt.exe"
 $Repo = "mbicl/cp_tester"
 $InstallDir = "$env:LOCALAPPDATA\Programs\$AppName"
 
@@ -19,7 +19,7 @@ if (-not $Version) {
 
 Write-Host "Installing $AppName $Version (windows/$Arch)..."
 
-$Filename = "cp_windows_${Arch}.exe"
+$Filename = "cpt_windows_${Arch}.exe"
 $DownloadUrl = "https://github.com/$Repo/releases/download/$Version/$Filename"
 
 # Create install directory

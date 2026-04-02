@@ -1,8 +1,8 @@
-.PHONY: build clean run build-linux build-darwin build-windows build-all install
+.PHONY: build clean run build-linux build-darwin build-windows build-all install uninstall
 default: run
 
 GO=go
-APP_NAME=cp
+APP_NAME=cpt
 VERSION=$(shell git describe --tags --always --dirty)
 COMMIT=$(shell git rev-parse --short HEAD)
 DATE=$(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
@@ -47,3 +47,8 @@ install: build
 	@echo "Installing $(APP_NAME) to /usr/local/bin..."
 	@install -m 755 $(BUILD_DIR)/$(APP_NAME) /usr/local/bin/$(APP_NAME)
 	@echo "Installation completed."
+
+uninstall:
+	@echo "Uninstalling $(APP_NAME) from /usr/local/bin..."
+	@rm -f /usr/local/bin/$(APP_NAME)
+	@echo "Uninstallation completed."
