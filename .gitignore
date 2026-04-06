@@ -1,5 +1,8 @@
 .DS_Store
 build/
 dist/
+tmp/
+
+// Ignore agent instructions and documentation
 CLAUDE.md
 copilot-instructions.md
