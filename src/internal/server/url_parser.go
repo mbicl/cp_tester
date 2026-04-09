@@ -20,6 +20,14 @@ func plainUrl(url string) string {
 		return ""
 	}
 
+	if url[0] == '/' {
+		return plainUrl(url[1:])
+	}
+
+	if url[len(url)-1] == '/' {
+		return plainUrl(url[:len(url)-1])
+	}
+
 	if url[:8] == "https://" {
 		return plainUrl(url[8:])
 	}
@@ -36,26 +44,25 @@ func plainUrl(url string) string {
 }
 
 var platformParsers = map[string]func(parts []string) (platform string, contestId string, problemId string, err error){
-	"codeforces.com":      codeforcesParser,
-	"atcoder.jp":          atcoderParser,
-	"acmp.ru":             acmpParser,
-	"robocontest.uz":      robocontestParser,
-	"kep.uz":              kepParser,
-	"cses.fi":             csesParser,
-	"codechef.com":        codechefParser,
-	"coderun.yandex.ru":   coderunParser,
-	"contest.yandex.ru":   yandexParser,
-	"acm.timus.ru":        timusParser,
-	"dmoj.ca":             dmojParser,
-	"eolymp.com":          eolympParser,
-	"hackerearth.com":     hackerearthParser,
-	"hackerrank.com":      hackerrankParser,
-	"kattis.com":          kattisParser,
-	"luogu.com.cn":        luoguParser,
-	"sortme.org":          sortmeParser,
-	"spoj.com":            spojParser,
-	"usaco.org":           usacoParser,
-	"uva.onlinejudge.org": uvaParser,
+	"codeforces.com":    codeforcesParser,
+	"atcoder.jp":        atcoderParser,
+	"acmp.ru":           acmpParser,
+	"robocontest.uz":    robocontestParser,
+	"kep.uz":            kepParser,
+	"cses.fi":           csesParser,
+	"codechef.com":      codechefParser,
+	"coderun.yandex.ru": coderunParser,
+	"contest.yandex.ru": yandexParser,
+	"acm.timus.ru":      timusParser,
+	"dmoj.ca":           dmojParser,
+	"eolymp.com":        eolympParser,
+	"hackerrank.com":    hackerrankParser,
+	"kattis.com":        kattisParser,
+	"luogu.com.cn":      luoguParser,
+	"sortme.org":        sortmeParser,
+	"spoj.com":          spojParser,
+	"usaco.org":         usacoParser,
+	"onlinejudge.org":   onlinejudgeParser,
 }
 
 func codeforcesParser(parts []string) (platform string, contestId string, problemId string, err error) {
@@ -302,50 +309,143 @@ func eolympParser(parts []string) (platform string, contestId string, problemId 
 	return "", "", "", errors.New("unsupported eolymp url format")
 }
 
-func hackerearthParser(parts []string) (platform string, contestId string, problemId string, err error) {
-	platform = "hackerearth"
-
-	panic("hackerearth parser not implemented")
-}
-
 func hackerrankParser(parts []string) (platform string, contestId string, problemId string, err error) {
 	platform = "hackerrank"
+	// hackerrank.com/challenges/birthday-cake-candles/problem?isFullScreen=true - problemset
 
-	panic("hackerrank parser not implemented")
+	if len(parts) < 4 {
+		return "", "", "", errors.New("invalid url format for hackerrank")
+	}
+
+	return platform, "", parts[2], nil
 }
 
 func kattisParser(parts []string) (platform string, contestId string, problemId string, err error) {
 	platform = "kattis"
+	// open.kattis.com/problems/sequences - problemset
+	// open.kattis.com/contests/xcr52d/problems/nodup - contest
+	// open.kattis.com/contests/uzcy9d/problems/squaredeal - contest
 
-	panic("kattis parser not implemented")
+	if len(parts) < 3 {
+		return "", "", "", errors.New("invalid url format for kattis")
+	}
+
+	switch parts[1] {
+	case "problems":
+		return platform, "", parts[2], nil
+	case "contests":
+		if len(parts) < 5 {
+			return "", "", "", errors.New("invalid url format for kattis contest")
+		}
+		return platform, parts[2], parts[4], nil
+	}
+
+	return "", "", "", errors.New("unsupported kattis url format")
 }
 
 func luoguParser(parts []string) (platform string, contestId string, problemId string, err error) {
 	platform = "luogu"
+	// luogu.com.cn/problem/P1001 - problemset
+	// luogu.com.cn/problem/P16213?contestId=319886 - contest
 
-	panic("luogu parser not implemented")
+	if len(parts) < 3 {
+		return "", "", "", errors.New("invalid url format for luogu")
+	}
+
+	if strings.Contains(parts[2], "contestId") {
+		subparts := strings.Split(parts[2], "?")
+		if len(subparts) < 2 {
+			return "", "", "", errors.New("invalid url format for luogu contest")
+		}
+		problemId := subparts[0]
+		contestId := strings.TrimPrefix(subparts[1], "contestId=")
+		return platform, contestId, problemId, nil
+	} else {
+		return platform, "", parts[2], nil
+	}
 }
 
 func sortmeParser(parts []string) (platform string, contestId string, problemId string, err error) {
 	platform = "sortme"
+	// sort-me.org/tasks/1122?archive=6&hidesolved=1&category=0 - contest
+	// sort-me.org/tasks/22 - problemset
 
-	panic("sortme parser not implemented")
+	if len(parts) < 3 {
+		return "", "", "", errors.New("invalid url format for sortme")
+	}
+
+	if strings.Contains(parts[2], "?") {
+		subparts := strings.Split(parts[2], "?")
+		return platform, "", subparts[0], nil
+	}
+
+	return platform, "", parts[2], nil
 }
 
 func spojParser(parts []string) (platform string, contestId string, problemId string, err error) {
 	platform = "spoj"
+	// spoj.com/problems/HOTLINE/ - problemset
+	// spoj.com/ALGO24S1/problems/ALGOUPT08/ - contest
 
-	panic("spoj parser not implemented")
+	if len(parts) < 3 {
+		return "", "", "", errors.New("invalid url format for spoj")
+	}
+
+	if parts[1] == "problems" {
+		return platform, "", parts[2], nil
+	} else {
+		if len(parts) < 4 {
+			return "", "", "", errors.New("invalid url format for spoj contest")
+		}
+		return platform, parts[1], parts[3], nil
+	}
 }
 
 func usacoParser(parts []string) (platform string, contestId string, problemId string, err error) {
 	platform = "usaco"
+	// usaco.org/index.php?page=viewproblem2&cpid=1542 - problemset
 
-	panic("usaco parser not implemented")
+	if len(parts) < 2 {
+		return "", "", "", errors.New("invalid url format for usaco")
+	}
+
+	queries := strings.Split(parts[1], "?")
+	if len(queries) < 2 {
+		return "", "", "", errors.New("invalid url format for usaco")
+	}
+
+	params := strings.SplitSeq(queries[1], "&")
+	for param := range params {
+		if strings.HasPrefix(param, "cpid=") {
+			problemId := param[len("cpid="):]
+			return platform, "", problemId, nil
+		}
+	}
+
+	return "", "", "", errors.New("invalid url format for usaco")
 }
 
-func uvaParser(parts []string) (platform string, contestId string, problemId string, err error) {
-	platform = "uva"
+func onlinejudgeParser(parts []string) (platform string, contestId string, problemId string, err error) {
+	platform = "onlinejudge"
 
-	panic("uva parser not implemented")
+	// onlinejudge.org/index.php?option=com_onlinejudge&Itemid=8&category=3&page=show_problem&problem=123 - problemset
+
+	if len(parts) < 2 {
+		return "", "", "", errors.New("invalid url format for onlinejudge")
+	}
+
+	queries := strings.Split(parts[1], "?")
+	if len(queries) < 2 {
+		return "", "", "", errors.New("invalid url format for onlinejudge")
+	}
+
+	params := strings.SplitSeq(queries[1], "&")
+	for param := range params {
+		if strings.HasPrefix(param, "problem=") {
+			problemId := param[len("problem="):]
+			return platform, "", problemId, nil
+		}
+	}
+
+	return "", "", "", errors.New("invalid url format for onlinejudge")
 }
