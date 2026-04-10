@@ -6,12 +6,15 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"go.yaml.in/yaml/v2"
 )
 
 type Config struct {
-	CPPath string `yaml:"CPPATH"`
+	CPPath   string `yaml:"CPPATH"`
+	Language string `yaml:"LANGUAGE"`
+	Template string `yaml:"TEMPLATE"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -38,6 +41,7 @@ func LoadConfig() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	config.Language = strings.ToLower(config.Language)
 	return &config, nil
 }
 
@@ -66,7 +70,7 @@ func checkConfigPath(configPath string) error {
 		if e != nil {
 			return e
 		}
-		e = os.WriteFile(configPath, []byte("CPPATH: ~/cp/\n"), 0644)
+		e = os.WriteFile(configPath, []byte("CPPATH: ~/cp/\nLANGUAGE: cpp\n"), 0644)
 		if e != nil {
 			return e
 		}

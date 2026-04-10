@@ -17,6 +17,7 @@ func HandleCompetitiveCompanion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Parse the incoming JSON payload
 	var problemContent ProblemContent
 	err := json.NewDecoder(r.Body).Decode(&problemContent)
 	if err != nil {
@@ -24,12 +25,14 @@ func HandleCompetitiveCompanion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = LoadConfig()
+	// Load configuration
+	config, err := LoadConfig()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
+	// Extract platform, contestId, and problemId from the URL
 	platform, contestId, problemId, err := ExtractPlatformAndProblemName(problemContent.URL)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -37,6 +40,29 @@ func HandleCompetitiveCompanion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("Received problem: %s (platform: %s, contestId: %s, problemId: %s)", problemContent.Name, platform, contestId, problemId)
+
+	config.CPPath += "/" + platform
+	if contestId != "" {
+		config.CPPath += "/" + contestId
+	}
+
+	// Create necessary folders for the problem
+	if err := createFolders(config.CPPath); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Save the tests of the problem
+	if err := saveTests(problemContent.Tests, config.CPPath); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Create the solution file if it doesn't exist
+	if err := createSolutionFile(config, &problemContent, problemId); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }
