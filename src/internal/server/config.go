@@ -36,13 +36,34 @@ func LoadConfig() (*Config, error) {
 	defer file.Close()
 
 	decoder := yaml.NewDecoder(file)
-	var config Config
+	config := loadDefaultConfig()
 	err = decoder.Decode(&config)
 	if err != nil {
 		return nil, err
 	}
 	config.Language = strings.ToLower(config.Language)
+	config.CPPath = expandHome(config.CPPath)
+	config.Template = expandHome(config.Template)
 	return &config, nil
+}
+
+func loadDefaultConfig() Config {
+	return Config{
+		CPPath:   "~/cp/",
+		Language: "cpp",
+		Template: "",
+	}
+}
+
+func expandHome(path string) string {
+	if strings.HasPrefix(path, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return path
+		}
+		return filepath.Join(home, path[2:])
+	}
+	return path
 }
 
 func getConfigPath() (string, error) {

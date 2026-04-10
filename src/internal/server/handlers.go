@@ -21,6 +21,7 @@ func HandleCompetitiveCompanion(w http.ResponseWriter, r *http.Request) {
 	var problemContent ProblemContent
 	err := json.NewDecoder(r.Body).Decode(&problemContent)
 	if err != nil {
+		log.Printf("Error decoding JSON: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -28,6 +29,7 @@ func HandleCompetitiveCompanion(w http.ResponseWriter, r *http.Request) {
 	// Load configuration
 	config, err := LoadConfig()
 	if err != nil {
+		log.Printf("Error loading config: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -35,6 +37,7 @@ func HandleCompetitiveCompanion(w http.ResponseWriter, r *http.Request) {
 	// Extract platform, contestId, and problemId from the URL
 	platform, contestId, problemId, err := ExtractPlatformAndProblemName(problemContent.URL)
 	if err != nil {
+		log.Printf("Error extracting platform and problem name: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -48,18 +51,21 @@ func HandleCompetitiveCompanion(w http.ResponseWriter, r *http.Request) {
 
 	// Create necessary folders for the problem
 	if err := createFolders(config.CPPath); err != nil {
+		log.Printf("Error creating folders: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	// Save the tests of the problem
-	if err := saveTests(problemContent.Tests, config.CPPath); err != nil {
+	if err := saveTests(problemContent.Tests, config.CPPath, problemId); err != nil {
+		log.Printf("Error saving tests: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	// Create the solution file if it doesn't exist
 	if err := createSolutionFile(config, &problemContent, problemId); err != nil {
+		log.Printf("Error creating solution file: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
